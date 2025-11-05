@@ -1,0 +1,12 @@
+__pycache__/
+**/__pycache__/
+
+/*.json
+/*.txt
+/*.csv
+/*.png
+
+data/
+datasets/
+results/
+graficas/

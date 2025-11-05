@@ -1,0 +1,5 @@
+TABLA COMPLETA DE RESULTADOS
+====================================================================================================
+ Config   Neuronas   Inicial    Pesado    Ngramas          Preproc           LR     Batch      F1    Precision   Recall 
+----------------------------------------------------------------------------------------------------
+   1         64       xavier      tf       (1, 1)         normalizar        0.01      16     0.734     0.792     0.685  

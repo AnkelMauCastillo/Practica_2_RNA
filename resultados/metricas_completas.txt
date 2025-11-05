@@ -1,0 +1,18 @@
+RESULTADOS COMPLETOS - PRÁCTICA 2
+================================================================================
+
+CONFIGURACIÓN 1:
+  Parámetros: {'neuronas_ocultas': 64, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 16, 'epochs': 100}
+  Resultados: Precision=0.7887, Recall=0.6892, F1=0.7356
+  Tiempo: 156.46 segundos
+------------------------------------------------------------
+CONFIGURACIÓN 2:
+  Parámetros: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 16, 'epochs': 100}
+  Resultados: Precision=0.7371, Recall=0.7703, F1=0.7533
+  Tiempo: 238.30 segundos
+------------------------------------------------------------
+CONFIGURACIÓN 3:
+  Parámetros: {'neuronas_ocultas': 256, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 16, 'epochs': 100}
+  Resultados: Precision=0.7853, Recall=0.6757, F1=0.7264
+  Tiempo: 530.11 segundos
+------------------------------------------------------------

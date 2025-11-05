@@ -1,0 +1,48 @@
+RESULTADOS OPTIMIZADOS - PRÁCTICA 2
+================================================================================
+
+Configuraciones exitosas: 0/14
+Tiempo total: 0.0 segundos
+
+Config 1: {'neuronas_ocultas': 64, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 2: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 3: {'neuronas_ocultas': 256, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 4: {'neuronas_ocultas': 512, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 5: {'neuronas_ocultas': 128, 'inicializacion': 'normal', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 6: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tfidf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 7: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (2, 2), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 8: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 2), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 9: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar_sin_stopwords', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 10: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar_sin_stopwords_stemming', 'lr': 0.01, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 11: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.1, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 12: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.5, 'batch_size': 32, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 13: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 16, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------
+Config 14: {'neuronas_ocultas': 128, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.01, 'batch_size': 64, 'epochs': 80}
+  ERROR: empty vocabulary; perhaps the documents only contain stop words
+------------------------------------------------------------

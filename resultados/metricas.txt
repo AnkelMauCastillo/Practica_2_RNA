@@ -1,0 +1,6 @@
+Config 1: {'neuronas_ocultas': 64, 'inicializacion': 'xavier', 'pesado_terminos': 'tf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar_sin_stopwords', 'lr': 0.01, 'batch_size': 16, 'epochs': 50}
+Precision: 0.7958, Recall: 0.5090, F1: 0.6209
+--------------------------------------------------
+Config 2: {'neuronas_ocultas': 128, 'inicializacion': 'normal', 'pesado_terminos': 'tfidf', 'ngramas': (1, 1), 'preprocesamiento': 'normalizar', 'lr': 0.1, 'batch_size': 32, 'epochs': 50}
+Precision: 0.9388, Recall: 0.2072, F1: 0.3395
+--------------------------------------------------
