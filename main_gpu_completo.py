@@ -9,8 +9,202 @@ from src.mlp_gpu import MLP_GPU
 from src.entrenamiento_gpu import entrenar_mlp_gpu
 from src.evaluacion_gpu import evaluar_modelo_gpu, validacion_cruzada_gpu
 from src.visualizacion import (graficar_perdidas, graficar_metricas_comparativas, 
-                              generar_tabla_resultados, graficar_evolucion_entrenamiento)
+                              generar_tabla_resultados, graficar_evolucion_entrenamiento,
+                              graficar_top5_configuraciones, graficar_comparacion_es_en)
 from configs_completas_gpu import CONFIGURACIONES
+
+
+def ejecutar_validacion_cruzada_completa(idioma='es', k_folds=5):
+    """Ejecuta validación cruzada para las 3 mejores configuraciones"""
+    print(f"\n🎯 INICIANDO VALIDACIÓN CRUZADA ({k_folds}-folds) - {idioma.upper()}")
+    
+    try:
+        # Cargar todos los datos
+        X_todos, y_todos = cargar_datos(f'data/hateval_{idioma}_all.json')
+        print(f"   📊 Datos cargados: {len(X_todos)} ejemplos")
+        print(f"   📈 Distribución de clases: {np.bincount(y_todos)}")
+        
+        # Identificar las 3 mejores configuraciones basadas en resultados previos
+        if idioma == 'es':
+            mejores_config_indices = [8, 1, 2]  # Basado en F1-score más alto
+            mejores_configs = [
+                CONFIGURACIONES[8],  # Config 9: (1,2) n-grams
+                CONFIGURACIONES[0],  # Config 1: 64 neuronas
+                CONFIGURACIONES[1]   # Config 2: 128 neuronas
+            ]
+        else:  # 'en'
+            mejores_config_indices = [8, 1, 5]  # Basado en F1-score más alto
+            mejores_configs = [
+                CONFIGURACIONES[8],  # Config 9: (1,2) n-grams
+                CONFIGURACIONES[0],  # Config 1: 64 neuronas  
+                CONFIGURACIONES[4]   # Config 5: 1024 neuronas
+            ]
+        
+        resultados_cv = {}
+        
+        for i, (config_idx, config) in enumerate(zip(mejores_config_indices, mejores_configs)):
+            print(f"\n   🔍 Configuración {i+1}/3 (Original: Config {config_idx+1}):")
+            print(f"      Neuronas: {config['neuronas_ocultas']}, Inicial: {config['inicializacion']}")
+            print(f"      Pesado: {config['pesado_terminos']}, Ngramas: {config['ngramas']}")
+            print(f"      Preproc: {config['preprocesamiento']}, LR: {config['lr']}")
+            
+            # Preprocesar datos para esta configuración
+            preprocesador = Preprocesador(idioma=idioma)
+            
+            preprocesamiento_type = config.get('preprocesamiento', 'normalizar')
+            if preprocesamiento_type == 'normalizar':
+                usar_stopwords = False
+                usar_stemming = False
+            elif preprocesamiento_type == 'normalizar_sin_stopwords':
+                usar_stopwords = True
+                usar_stemming = False
+            elif preprocesamiento_type == 'normalizar_sin_stopwords_stemming':
+                usar_stopwords = True
+                usar_stemming = True
+            else:
+                usar_stopwords = False
+                usar_stemming = False
+            
+            print(f"      Preprocesando textos...")
+            X_procesados = []
+            for texto in X_todos:
+                texto_proc = preprocesador.preprocesar(
+                    texto, 
+                    usar_stopwords=usar_stopwords, 
+                    usar_stemming=usar_stemming
+                )
+                X_procesados.append(texto_proc)
+            
+            # Vectorizar
+            vectorizador = crear_vectorizador(
+                tipo=config['pesado_terminos'],
+                ngram_range=config['ngramas']
+            )
+            X_vec = vectorizador.fit_transform(X_procesados).toarray()
+            y_vec = np.array(y_todos).reshape(-1, 1)
+            
+            print(f"      ✅ Datos vectorizados: {X_vec.shape}")
+            
+            # Ejecutar validación cruzada
+            cv_start = time.time()
+            avg_scores, fold_scores = validacion_cruzada_gpu(
+                config, X_vec, y_vec, entrenar_mlp_gpu, k_folds=k_folds,  # <-- AGREGAR entrenar_mlp_gpu
+                epochs=min(config['epochs'], 100),
+                lr=config['lr'],
+                batch_size=config['batch_size']
+            )
+            cv_time = time.time() - cv_start
+            
+            resultados_cv[config_idx] = {
+                'config': config,
+                'cv_scores': avg_scores,
+                'fold_scores': fold_scores,
+                'tiempo_total': cv_time
+            }
+            
+            print(f"      📊 Resultados CV:")
+            print(f"        F1: {avg_scores['f1']:.4f} ± {avg_scores['std_f1']:.4f}")
+            print(f"        Precision: {avg_scores['precision']:.4f}")
+            print(f"        Recall: {avg_scores['recall']:.4f}")
+            print(f"        Accuracy: {avg_scores['accuracy']:.4f}")
+            print(f"        Tiempo: {cv_time:.2f}s")
+            
+            # Liberar memoria
+            del vectorizador
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        
+        # Guardar resultados de validación cruzada
+        guardar_resultados_validacion_cruzada(resultados_cv, idioma)
+        return resultados_cv
+        
+    except Exception as e:
+        print(f"   ❌ Error en validación cruzada: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def guardar_resultados_validacion_cruzada(resultados_cv, idioma):
+    """Guarda los resultados de validación cruzada en archivo"""
+    with open(f'resultados/validacion_cruzada_{idioma}.txt', 'w', encoding='utf-8') as f:
+        f.write(f"RESULTADOS VALIDACIÓN CRUZADA (5-folds) - {idioma.upper()}\n")
+        f.write("="*80 + "\n\n")
+        
+        for config_idx, resultado in resultados_cv.items():
+            config = resultado['config']
+            scores = resultado['cv_scores']
+            
+            f.write(f"CONFIGURACIÓN ORIGINAL {config_idx+1}:\n")
+            f.write(f"  Parámetros: {config}\n")
+            f.write(f"  Resultados Validación Cruzada:\n")
+            f.write(f"    F1-score: {scores['f1']:.4f} ± {scores['std_f1']:.4f}\n")
+            f.write(f"    Precision: {scores['precision']:.4f}\n")
+            f.write(f"    Recall: {scores['recall']:.4f}\n")
+            f.write(f"    Accuracy: {scores['accuracy']:.4f}\n")
+            f.write(f"    Tiempo promedio por fold: {scores['tiempo_promedio']:.2f}s\n")
+            f.write(f"    Tiempo total validación: {resultado['tiempo_total']:.2f}s\n")
+            
+            # Resultados por fold
+            f.write(f"  Resultados por Fold:\n")
+            for fold_idx, fold_score in enumerate(resultado['fold_scores']):
+                f.write(f"    Fold {fold_idx+1}: F1={fold_score['f1']:.4f}, "
+                       f"Precision={fold_score['precision']:.4f}, "
+                       f"Recall={fold_score['recall']:.4f}, "
+                       f"Accuracy={fold_score['accuracy']:.4f}\n")
+            
+            f.write("-" * 80 + "\n\n")
+
+def generar_analisis_comparativo(resultados_es, resultados_en):
+    """Genera análisis comparativo automático basado en resultados"""
+    
+    # Encontrar mejores configuraciones por idioma
+    mejor_es_idx = np.argmax([r['f1'] for r in resultados_es])
+    mejor_en_idx = np.argmax([r['f1'] for r in resultados_en])
+    
+    mejor_es = resultados_es[mejor_es_idx]
+    mejor_en = resultados_en[mejor_en_idx]
+    
+    with open('resultados/analisis_comparativo.txt', 'w', encoding='utf-8') as f:
+        f.write("ANÁLISIS COMPARATIVO - RESULTADOS EXPERIMENTALES\n")
+        f.write("="*80 + "\n\n")
+        
+        f.write("MEJORES CONFIGURACIONES POR IDIOMA:\n")
+        f.write("-" * 50 + "\n")
+        f.write(f"ESPAÑOL - Config {mejor_es_idx+1}:\n")
+        f.write(f"  F1: {mejor_es['f1']:.4f}, Precision: {mejor_es['precision']:.4f}, Recall: {mejor_es['recall']:.4f}\n")
+        f.write(f"  Parámetros: {mejor_es['config']}\n\n")
+        
+        f.write(f"INGLÉS - Config {mejor_en_idx+1}:\n")
+        f.write(f"  F1: {mejor_en['f1']:.4f}, Precision: {mejor_en['precision']:.4f}, Recall: {mejor_en['recall']:.4f}\n")
+        f.write(f"  Parámetros: {mejor_en['config']}\n\n")
+        
+        f.write("COMPARATIVO ENTRE IDIOMAS:\n")
+        f.write("-" * 50 + "\n")
+        f.write(f"Diferencia en F1-score: {mejor_es['f1'] - mejor_en['f1']:.4f}\n")
+        f.write(f"Rendimiento relativo: {(mejor_es['f1']/mejor_en['f1']-1)*100:+.1f}%\n\n")
+        
+        f.write("TENDENCIAS OBSERVADAS:\n")
+        f.write("-" * 50 + "\n")
+        
+        # Análisis de neuronas
+        f.write("1. NEURONAS OCULTAS:\n")
+        neuronas_es = [r for r in resultados_es if r['config']['ngramas'] == (1,1) and r['config']['preprocesamiento'] == 'normalizar']
+        neuronas_en = [r for r in resultados_en if r['config']['ngramas'] == (1,1) and r['config']['preprocesamiento'] == 'normalizar']
+        
+        for i, (res_es, res_en) in enumerate(zip(neuronas_es[:5], neuronas_en[:5])):
+            f.write(f"  {res_es['config']['neuronas_ocultas']} neuronas - ES: {res_es['f1']:.4f}, EN: {res_en['f1']:.4f}\n")
+        
+        # Análisis de n-gramas
+        f.write("\n2. N-GRAMAS:\n")
+        ngrams_es = [r for r in resultados_es if r['config']['neuronas_ocultas'] == 128 and r['config']['preprocesamiento'] == 'normalizar']
+        ngrams_en = [r for r in resultados_en if r['config']['neuronas_ocultas'] == 128 and r['config']['preprocesamiento'] == 'normalizar']
+        
+        for res in ngrams_es:
+            if res['config']['ngramas'] in [(1,1), (2,2), (1,2)]:
+                f.write(f"  {res['config']['ngramas']} - ES: {res['f1']:.4f}\n")
+        for res in ngrams_en:
+            if res['config']['ngramas'] in [(1,1), (2,2), (1,2)]:
+                f.write(f"  {res['config']['ngramas']} - EN: {res['f1']:.4f}\n")
 
 def verificar_gpu():
     """Verifica y muestra información de la GPU"""
@@ -329,6 +523,11 @@ def main():
         if resultados:
             # Generar gráficas y tablas
             print(f"\n📈 Generando gráficas y tablas para {idioma.upper()}...")
+            
+            # Gráfica de TOP 5 configuraciones (requerido por PDF)
+            graficar_top5_configuraciones(resultados, CONFIGURACIONES, idioma)
+            
+            # Gráficas adicionales
             graficar_perdidas(CONFIGURACIONES, resultados, top_n=5, idioma=idioma)
             graficar_metricas_comparativas(resultados, CONFIGURACIONES, idioma=idioma)
             graficar_evolucion_entrenamiento(resultados, CONFIGURACIONES, top_n=3, idioma=idioma)
@@ -347,9 +546,20 @@ def main():
             
             print(f"\n⏱️  Tiempo total {idioma.upper()}: {sum(tiempos):.2f} segundos")
             print(f"⏱️  Tiempo promedio por configuración: {np.mean(tiempos):.2f} segundos")
-            
-            # Ejecutar validación cruzada para las mejores configuraciones
-            ejecutar_validacion_cruzada_mejores(idioma, resultados, k_folds=5)
+    
+    # Ejecutar validación cruzada para ambos idiomas
+    print(f"\n{'='*80}")
+    print("🎯 EJECUTANDO VALIDACIÓN CRUZADA PARA MEJORES CONFIGURACIONES")
+    print(f"{'='*80}")
+    
+    for idioma in idiomas:
+        if idioma in todos_resultados:
+            resultados_cv = ejecutar_validacion_cruzada_completa(idioma, k_folds=5)
+    
+    # Generar análisis comparativo y gráfica ES vs EN
+    if 'es' in todos_resultados and 'en' in todos_resultados:
+        generar_analisis_comparativo(todos_resultados['es'], todos_resultados['en'])
+        graficar_comparacion_es_en(todos_resultados['es'], todos_resultados['en'], CONFIGURACIONES)
     
     print(f"\n{'='*80}")
     print("🎉 EXPERIMENTO COMPLETADO EXITOSAMENTE")
@@ -358,8 +568,10 @@ def main():
     print("   - resultados/metricas_detalladas_[es|en].txt")
     print("   - resultados/tabla_resultados_[es|en].txt") 
     print("   - resultados/validacion_cruzada_[es|en].txt")
+    print("   - resultados/analisis_comparativo.txt")
     print("   - resultados/graficas/")
     print(f"{'='*80}")
+
 
 if __name__ == '__main__':
     main()
