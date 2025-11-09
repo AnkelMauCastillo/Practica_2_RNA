@@ -9,7 +9,7 @@ from src.representaciones import crear_vectorizador
 from src.mlp import MLP
 from src.entrenamiento import entrenar_mlp, evaluar_modelo
 from src.visualizacion import graficar_perdidas, graficar_metricas_comparativas, generar_tabla_resultados
-from configs import CONFIGURACIONES
+from configs_completas_gpu import CONFIGURACIONES
 
 def cargar_datos(archivo):
     """Carga datos desde archivo JSON o JSONL"""

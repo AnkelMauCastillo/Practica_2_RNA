@@ -9,7 +9,7 @@ from src.preprocesamiento import Preprocesador
 from src.representaciones import crear_vectorizador
 from src.mlp import MLP
 from src.entrenamiento import entrenar_mlp, evaluar_modelo
-from configs import CONFIGURACIONES
+from configs_completas_gpu import CONFIGURACIONES
 
 def preprocesar_lote(config, textos, idioma='es'):
     """Preprocesa un lote de textos (reutilizable)"""
