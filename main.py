@@ -66,8 +66,8 @@ def aplicar_preprocesamiento(config, textos, idioma='es'):
     return textos_procesados
 
 def main():
-    print("🚀 INICIANDO PRÁCTICA 2: CLASIFICACIÓN DE HATE SPEECH")
-    print("📊 Probando todas las configuraciones de la Tabla 1")
+    print(" INICIANDO PRÁCTICA 2: CLASIFICACIÓN DE HATE SPEECH")
+    print(" Probando todas las configuraciones de la Tabla 1")
     
     # Crear directorios
     os.makedirs('resultados/graficas', exist_ok=True)
@@ -79,42 +79,42 @@ def main():
     
     try:
         # Cargar datos
-        print("📂 Cargando datos...")
+        print(" Cargando datos...")
         X_entrenamiento, y_entrenamiento = cargar_datos('data/hateval_es_train.json')
         X_prueba, y_prueba = cargar_datos('data/hateval_es_test.json')
         
-        print(f"✅ Datos cargados:")
+        print(f" Datos cargados:")
         print(f"   - Entrenamiento: {len(X_entrenamiento)} ejemplos")
         print(f"   - Prueba: {len(X_prueba)} ejemplos")
         print(f"   - Distribución clases (train): {np.bincount(y_entrenamiento)}")
         print(f"   - Distribución clases (test): {np.bincount(y_prueba)}")
         
     except Exception as e:
-        print(f"❌ Error cargando datos: {e}")
+        print(f" Error cargando datos: {e}")
         return
 
     # Probar todas las configuraciones
     resultados = []
     tiempos_ejecucion = []
     
-    print(f"\n🔬 Probando {len(CONFIGURACIONES)} configuraciones...")
+    print(f"\n Probando {len(CONFIGURACIONES)} configuraciones...")
     
     for config_idx, config in enumerate(CONFIGURACIONES):
         inicio_tiempo = time.time()
         
         print(f"\n{'='*80}")
-        print(f"⚙️  Configuración {config_idx + 1}/{len(CONFIGURACIONES)}")
+        print(f"  Configuración {config_idx + 1}/{len(CONFIGURACIONES)}")
         print(f"{config}")
         print(f"{'='*80}")
 
         try:
             # Preprocesamiento
-            print("🔄 Preprocesando textos...")
+            print(" Preprocesando textos...")
             X_ent_limpio = aplicar_preprocesamiento(config, X_entrenamiento, 'es')
             X_prueba_limpio = aplicar_preprocesamiento(config, X_prueba, 'es')
 
             # Vectorización
-            print("📊 Vectorizando textos...")
+            print(" Vectorizando textos...")
             vectorizador = crear_vectorizador(
                 tipo=config['pesado_terminos'],
                 ngram_range=config['ngramas']
@@ -135,7 +135,7 @@ def main():
             y_ent = np.array(y_entrenamiento).reshape(-1, 1)
             y_pru = np.array(y_prueba).reshape(-1, 1)
 
-            print("🎯 Entrenando modelo...")
+            print(" Entrenando modelo...")
             train_losses, test_losses = entrenar_mlp(
                 modelo, X_ent_vec, y_ent, X_prueba_vec, y_pru,
                 epochs=config['epochs'],
@@ -160,11 +160,11 @@ def main():
             }
             resultados.append(resultado)
             
-            print(f"\n📊 RESULTADOS:")
-            print(f"   ✅ Precision: {precision:.4f}")
-            print(f"   ✅ Recall: {recall:.4f}")
-            print(f"   ✅ F1-score: {f1:.4f}")
-            print(f"   ⏱️  Tiempo ejecución: {tiempo_ejecucion:.2f} segundos")
+            print(f"\n RESULTADOS:")
+            print(f"    Precision: {precision:.4f}")
+            print(f"    Recall: {recall:.4f}")
+            print(f"    F1-score: {f1:.4f}")
+            print(f"   ⏱  Tiempo ejecución: {tiempo_ejecucion:.2f} segundos")
 
             # Guardar resultados detallados
             with open('resultados/metricas_completas.txt', 'a', encoding='utf-8') as f:
@@ -175,7 +175,7 @@ def main():
                 f.write("-" * 60 + "\n")
 
         except Exception as e:
-            print(f"❌ Error en configuración {config_idx + 1}: {e}")
+            print(f" Error en configuración {config_idx + 1}: {e}")
             # Agregar resultado vacío para mantener índices
             resultados.append({
                 'config': config,
@@ -189,11 +189,11 @@ def main():
 
     # Análisis final
     print(f"\n{'='*80}")
-    print("🎉 EXPERIMENTO COMPLETADO")
+    print(" EXPERIMENTO COMPLETADO")
     print(f"{'='*80}")
     
     # Generar gráficas y tablas
-    print("\n📈 Generando gráficas y tablas...")
+    print("\n Generando gráficas y tablas...")
     graficar_perdidas(CONFIGURACIONES, resultados, top_n=5)
     graficar_metricas_comparativas(resultados, CONFIGURACIONES)
     generar_tabla_resultados(resultados, CONFIGURACIONES)
@@ -201,13 +201,13 @@ def main():
     # Mejores configuraciones
     mejores_indices = np.argsort([r['f1'] for r in resultados])[-3:][::-1]
     
-    print(f"\n🏆 MEJORES 3 CONFIGURACIONES (por F1-score):")
+    print(f"\n MEJORES 3 CONFIGURACIONES (por F1-score):")
     for i, idx in enumerate(mejores_indices):
         res = resultados[idx]
         print(f"  {i+1}. Config {idx+1}: F1 = {res['f1']:.4f}, Precision = {res['precision']:.4f}, Recall = {res['recall']:.4f}")
     
-    print(f"\n⏱️  Tiempo total de ejecución: {sum(tiempos_ejecucion):.2f} segundos")
-    print(f"📁 Resultados guardados en: /resultados/")
+    print(f"\n  Tiempo total de ejecución: {sum(tiempos_ejecucion):.2f} segundos")
+    print(f" Resultados guardados en: /resultados/")
 
 if __name__ == '__main__':
     main()
