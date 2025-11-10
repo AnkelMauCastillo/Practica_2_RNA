@@ -1,4 +1,4 @@
-# src/preprocesamiento.py (versión corregida)
+# src/preprocesamiento.py 
 
 import re
 import nltk

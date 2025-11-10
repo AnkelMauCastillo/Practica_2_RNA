@@ -1,3 +1,4 @@
+# main_gpu_completo.py
 import json
 import numpy as np
 import os
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 from src.preprocesamiento import Preprocesador
 from src.representaciones import crear_vectorizador
 from src.mlp_gpu import MLP_GPU
-from src.entrenamiento_gpu import entrenar_mlp_gpu
+from src.entrenamiento_gpu import entrenar_mlp_gpu_simple
 from src.evaluacion_gpu import evaluar_modelo_gpu, validacion_cruzada_gpu
 from src.visualizacion import (graficar_perdidas, graficar_metricas_comparativas, 
                               generar_tabla_resultados, graficar_evolucion_entrenamiento,
@@ -15,15 +16,14 @@ from src.visualizacion import (graficar_perdidas, graficar_metricas_comparativas
 from configs_completas_gpu import CONFIGURACIONES
 
 # =============================================================================
-# NUEVAS FUNCIONES PARA ANÁLISIS Y GRÁFICAS
+# ANÁLISIS Y GRÁFICAS
 # =============================================================================
 
 def graficar_error_vs_epocas_top5(resultados, configuraciones, idioma='es'):
     """
     Genera gráficas de error vs épocas para las 5 mejores configuraciones
-    según lo requerido en el PDF
     """
-    print(f"📊 Generando gráficas de error vs épocas para {idioma.upper()}...")
+    print(f" Generando gráficas de error vs épocas para {idioma.upper()}...")
     
     # Ordenar por F1-score y tomar las 5 mejores
     indices_mejores = np.argsort([r['f1'] for r in resultados])[-5:][::-1]
@@ -100,14 +100,14 @@ def graficar_error_vs_epocas_top5(resultados, configuraciones, idioma='es'):
     plt.savefig(filename, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
     
-    print(f"   ✅ Gráfica de error vs épocas guardada: {filename}")
+    print(f"   Gráfica de error vs épocas guardada: {filename}")
     return filename
 
 def generar_analisis_profundo_tendencias(resultados_es, resultados_en, configuraciones):
     """
-    Genera un análisis profundo de tendencias basado en los resultados experimentales
+    Genera un análisis profundo de tendencias basado en los resultados 
     """
-    print("📝 Generando análisis profundo de tendencias...")
+    print(" Generando análisis profundo de tendencias...")
     
     analisis = []
     
@@ -299,7 +299,7 @@ def generar_analisis_profundo_tendencias(resultados_es, resultados_en, configura
     analisis.append("")
     
     # 7. CONCLUSIONES GENERALES
-    analisis.append("CONCLUSIONES PRINCIPALES")
+    analisis.append("CONCLUSIONES GENERALES")
     analisis.append("=" * 50)
     
     # Mejores configuraciones globales
@@ -324,14 +324,6 @@ def generar_analisis_profundo_tendencias(resultados_es, resultados_en, configura
     
     analisis.append("")
     
-    # Recomendaciones
-    analisis.append("RECOMENDACIONES:")
-    analisis.append("- Para español: Usar unigramas+bigramas con TF y preprocesamiento normal")
-    analisis.append("- Para inglés:  Mejor rendimiento con configuraciones similares pero menor F1")
-    analisis.append("- Xavier initialization generalmente mejor que Normal")
-    analisis.append("- Learning rate 0.01 ofrece mejor equilibrio entre convergencia y estabilidad")
-    analisis.append("- Preprocesamiento simple (sin stopwords/stemming) funciona mejor")
-    
     # Guardar análisis
     os.makedirs('resultados', exist_ok=True)
     with open('resultados/analisis_profundo_tendencias.txt', 'w', encoding='utf-8') as f:
@@ -340,22 +332,22 @@ def generar_analisis_profundo_tendencias(resultados_es, resultados_en, configura
         for linea in analisis:
             f.write(linea + "\n")
     
-    print("   ✅ Análisis profundo guardado: resultados/analisis_profundo_tendencias.txt")
+    print("   Análisis profundo guardado: resultados/analisis_profundo_tendencias.txt")
     return analisis
 
 # =============================================================================
-# FUNCIONES ORIGINALES CORREGIDAS
+# FUNCIONES PRINCIPALES DE VALIDACIÓN CRUZADA
 # =============================================================================
 
 def ejecutar_validacion_cruzada_completa(idioma='es', k_folds=5):
     """Ejecuta validación cruzada para las 3 mejores configuraciones"""
-    print(f"\n🎯 INICIANDO VALIDACIÓN CRUZADA ({k_folds}-folds) - {idioma.upper()}")
+    print(f"\n INICIANDO VALIDACIÓN CRUZADA ({k_folds}-folds) - {idioma.upper()}")
     
     try:
         # Cargar todos los datos
         X_todos, y_todos = cargar_datos(f'data/hateval_{idioma}_all.json')
-        print(f"   📊 Datos cargados: {len(X_todos)} ejemplos")
-        print(f"   📈 Distribución de clases: {np.bincount(y_todos)}")
+        print(f"    Datos cargados: {len(X_todos)} ejemplos")
+        print(f"    Distribución de clases: {np.bincount(y_todos)}")
         
         # Identificar las 3 mejores configuraciones basadas en resultados previos
         if idioma == 'es':
@@ -376,7 +368,7 @@ def ejecutar_validacion_cruzada_completa(idioma='es', k_folds=5):
         resultados_cv = {}
         
         for i, (config_idx, config) in enumerate(zip(mejores_config_indices, mejores_configs)):
-            print(f"\n   🔍 Configuración {i+1}/3 (Original: Config {config_idx+1}):")
+            print(f"\n    Configuración {i+1}/3 (Original: Config {config_idx+1}):")
             print(f"      Neuronas: {config['neuronas_ocultas']}, Inicial: {config['inicializacion']}")
             print(f"      Pesado: {config['pesado_terminos']}, Ngramas: {config['ngramas']}")
             print(f"      Preproc: {config['preprocesamiento']}, LR: {config['lr']}")
@@ -416,12 +408,12 @@ def ejecutar_validacion_cruzada_completa(idioma='es', k_folds=5):
             X_vec = vectorizador.fit_transform(X_procesados).toarray()
             y_vec = np.array(y_todos).reshape(-1, 1)
             
-            print(f"      ✅ Datos vectorizados: {X_vec.shape}")
+            print(f"       Datos vectorizados: {X_vec.shape}")
             
             # Ejecutar validación cruzada
             cv_start = time.time()
             avg_scores, fold_scores = validacion_cruzada_gpu(
-                config, X_vec, y_vec, entrenar_mlp_gpu, k_folds=k_folds,
+                config, X_vec, y_vec, entrenar_mlp_gpu_simple, k_folds=k_folds,
                 epochs=min(config['epochs'], 100),
                 lr=config['lr'],
                 batch_size=config['batch_size']
@@ -434,8 +426,8 @@ def ejecutar_validacion_cruzada_completa(idioma='es', k_folds=5):
                 'fold_scores': fold_scores,
                 'tiempo_total': cv_time
             }
-            
-            print(f"      📊 Resultados CV:")
+
+            print(f"   Resultados CV:")
             print(f"        F1: {avg_scores['f1']:.4f} ± {avg_scores['std_f1']:.4f}")
             print(f"        Precision: {avg_scores['precision']:.4f}")
             print(f"        Recall: {avg_scores['recall']:.4f}")
@@ -452,7 +444,7 @@ def ejecutar_validacion_cruzada_completa(idioma='es', k_folds=5):
         return resultados_cv
         
     except Exception as e:
-        print(f"   ❌ Error en validación cruzada: {e}")
+        print(f"   Error en validación cruzada: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -492,7 +484,7 @@ def generar_analisis_comparativo(resultados_es, resultados_en):
     
     # Encontrar mejores configuraciones por idioma
     if not resultados_es or not resultados_en:
-        print("❌ No hay resultados suficientes para análisis comparativo")
+        print(" No hay resultados suficientes para análisis comparativo")
         return
     
     mejor_es_idx = np.argmax([r['f1'] for r in resultados_es])
@@ -547,7 +539,7 @@ def verificar_gpu():
     """Verifica y muestra información de la GPU"""
     if torch.cuda.is_available():
         gpu_count = torch.cuda.device_count()
-        print(f"✅ GPUs disponibles: {gpu_count}")
+        print(f" GPUs disponibles: {gpu_count}")
         for i in range(gpu_count):
             gpu_name = torch.cuda.get_device_name(i)
             gpu_memory = torch.cuda.get_device_properties(i).total_memory / 1024**3
@@ -558,7 +550,7 @@ def verificar_gpu():
         print(f"   Usando GPU: {torch.cuda.get_device_name(0)}")
         return True
     else:
-        print("❌ No se encontró GPU compatible con CUDA")
+        print(" No se encontró GPU compatible con CUDA")
         return False
 
 def cargar_datos(archivo):
@@ -580,10 +572,10 @@ def cargar_datos(archivo):
                         except json.JSONDecodeError:
                             continue
     except FileNotFoundError:
-        print(f"❌ Archivo no encontrado: {archivo}")
+        print(f" Archivo no encontrado: {archivo}")
         return [], []
     except Exception as e:
-        print(f"❌ Error cargando {archivo}: {e}")
+        print(f" Error cargando {archivo}: {e}")
         return [], []
     
     textos = [d.get('text', '') for d in datos]
@@ -591,7 +583,7 @@ def cargar_datos(archivo):
     return textos, etiquetas
 
 def aplicar_preprocesamiento(config, textos, idioma='es'):
-    """Aplica el preprocesamiento según la configuración"""
+    """Aplica el preprocesamiento confoeme a la configuración"""
     preprocesador = Preprocesador(idioma=idioma)
     
     preprocesamiento_type = config.get('preprocesamiento', 'normalizar')
@@ -626,34 +618,34 @@ def aplicar_preprocesamiento(config, textos, idioma='es'):
 def ejecutar_experimento_idioma(idioma='es'):
     """Ejecuta el experimento completo para un idioma"""
     print(f"\n{'='*80}")
-    print(f"🏁 INICIANDO EXPERIMENTO PARA IDIOMA: {idioma.upper()}")
+    print(f" INICIANDO EXPERIMENTO PARA IDIOMA: {idioma.upper()}")
     print(f"{'='*80}")
     
     # Cargar datos
-    print("📂 Cargando datos...")
+    print(" Cargando datos...")
     try:
         X_entrenamiento, y_entrenamiento = cargar_datos(f'data/hateval_{idioma}_train.json')
         X_prueba, y_prueba = cargar_datos(f'data/hateval_{idioma}_test.json')
         
         if len(X_entrenamiento) == 0 or len(X_prueba) == 0:
-            print(f"   ❌ No se pudieron cargar datos para {idioma}")
+            print(f"    No se pudieron cargar datos para {idioma}")
             return [], []
         
-        print(f"   ✅ Datos cargados:")
+        print(f"    Datos cargados:")
         print(f"      - Entrenamiento: {len(X_entrenamiento)} ejemplos")
         print(f"      - Prueba: {len(X_prueba)} ejemplos")
         print(f"      - Distribución clases (train): {np.bincount(y_entrenamiento)}")
         print(f"      - Distribución clases (test): {np.bincount(y_prueba)}")
         
     except Exception as e:
-        print(f"   ❌ Error cargando datos: {e}")
+        print(f"   Error cargando datos: {e}")
         return [], []
 
     # Probar todas las configuraciones
     resultados = []
     tiempos_ejecucion = []
     
-    print(f"\n🔬 Probando {len(CONFIGURACIONES)} configuraciones para {idioma.upper()}...")
+    print(f"\n Probando {len(CONFIGURACIONES)} configuraciones para {idioma.upper()}...")
     
     for config_idx, config in enumerate(CONFIGURACIONES):
         inicio_tiempo = time.time()
@@ -667,12 +659,12 @@ def ejecutar_experimento_idioma(idioma='es'):
 
         try:
             # Preprocesamiento
-            print("  🧹 Preprocesando textos...")
+            print("   Preprocesando textos...")
             X_ent_limpio = aplicar_preprocesamiento(config, X_entrenamiento, idioma)
             X_prueba_limpio = aplicar_preprocesamiento(config, X_prueba, idioma)
 
             # Vectorización
-            print("  🔢 Vectorizando textos...")
+            print("   Vectorizando textos...")
             vectorizador = crear_vectorizador(
                 tipo=config['pesado_terminos'],
                 ngram_range=config['ngramas']
@@ -680,8 +672,8 @@ def ejecutar_experimento_idioma(idioma='es'):
             X_ent_vec = vectorizador.fit_transform(X_ent_limpio).toarray()
             X_prueba_vec = vectorizador.transform(X_prueba_limpio).toarray()
 
-            print(f"     ✅ Dimensionalidad: {X_ent_vec.shape[1]} features")
-            print(f"     ✅ Memoria: {(X_ent_vec.nbytes + X_prueba_vec.nbytes) / 1024**2:.2f} MB")
+            print(f"      Dimensionalidad: {X_ent_vec.shape[1]} features")
+            print(f"      Memoria: {(X_ent_vec.nbytes + X_prueba_vec.nbytes) / 1024**2:.2f} MB")
 
             # Crear y entrenar modelo en GPU
             modelo = MLP_GPU(
@@ -693,12 +685,10 @@ def ejecutar_experimento_idioma(idioma='es'):
             y_ent = np.array(y_entrenamiento).reshape(-1, 1)
             y_pru = np.array(y_prueba).reshape(-1, 1)
 
-            print("  🎯 Entrenando modelo en GPU...")
-            metricas_entrenamiento = entrenar_mlp_gpu(
+            print("   Entrenando modelo en GPU...")
+            metricas_entrenamiento = entrenar_mlp_gpu_simple(
                 modelo, X_ent_vec, y_ent, X_prueba_vec, y_pru,
-                epochs=config['epochs'],
-                batch_size=config['batch_size'],
-                lr=config['lr']
+                epochs=config['epochs'], batch_size=config['batch_size'], lr=config['lr']
             )
 
             # Evaluar
@@ -721,12 +711,12 @@ def ejecutar_experimento_idioma(idioma='es'):
             }
             resultados.append(resultado)
             
-            print(f"\n  📊 RESULTADOS:")
-            print(f"     ✅ Precision: {resultados_evaluacion['precision']:.4f}")
-            print(f"     ✅ Recall: {resultados_evaluacion['recall']:.4f}")
-            print(f"     ✅ F1-score: {resultados_evaluacion['f1']:.4f}")
-            print(f"     ✅ Accuracy: {resultados_evaluacion['accuracy']:.4f}")
-            print(f"     ⏱️  Tiempo: {tiempo_ejecucion:.2f} segundos")
+            print(f"\n   RESULTADOS:")
+            print(f"      Precision: {resultados_evaluacion['precision']:.4f}")
+            print(f"      Recall: {resultados_evaluacion['recall']:.4f}")
+            print(f"      F1-score: {resultados_evaluacion['f1']:.4f}")
+            print(f"      Accuracy: {resultados_evaluacion['accuracy']:.4f}")
+            print(f"      Tiempo: {tiempo_ejecucion:.2f} segundos")
 
             # Guardar resultados detallados
             with open(f'resultados/metricas_detalladas_{idioma}.txt', 'a', encoding='utf-8') as f:
@@ -741,7 +731,7 @@ def ejecutar_experimento_idioma(idioma='es'):
                 torch.cuda.empty_cache()
 
         except Exception as e:
-            print(f"  ❌ Error en configuración {config_idx + 1}: {e}")
+            print(f"   Error en configuración {config_idx + 1}: {e}")
             import traceback
             traceback.print_exc()
             
@@ -767,8 +757,8 @@ def ejecutar_experimento_idioma(idioma='es'):
 # =============================================================================
 
 def main():
-    print("🧠 PRÁCTICA 2: CLASIFICACIÓN DE HATE SPEECH CON MLP Y GPU")
-    print("📊 Implementación desde cero con PyTorch y optimización GPU")
+    print(" PRÁCTICA 2: CLASIFICACIÓN DE HATE SPEECH CON MLP Y GPU")
+    print(" Implementación desde cero con PyTorch y optimización GPU")
     print("="*80)
     
     # Verificar GPU
@@ -788,16 +778,16 @@ def main():
             f.write("="*80 + "\n\n")
         
         # Ejecutar experimento para el idioma
-        print(f"\n▶️  INICIANDO EXPERIMENTO PARA {idioma.upper()}")
+        print(f"\n  INICIANDO EXPERIMENTO PARA {idioma.upper()}")
         resultados, tiempos = ejecutar_experimento_idioma(idioma)
         
         if resultados and len(resultados) > 0:
             todos_resultados[idioma] = resultados
             
             # Generar gráficas y tablas
-            print(f"\n📈 Generando gráficas y tablas para {idioma.upper()}...")
+            print(f"\n Generando gráficas y tablas para {idioma.upper()}...")
             
-            # NUEVO: Gráfica de error vs épocas para TOP 5 configuraciones (requerido por PDF)
+            # Gráfica de error vs épocas para TOP 5 configuraciones 
             graficar_error_vs_epocas_top5(resultados, CONFIGURACIONES, idioma)
             
             # Gráficas adicionales existentes
@@ -810,7 +800,7 @@ def main():
             # Análisis final
             mejores_indices = np.argsort([r['f1'] for r in resultados])[-3:][::-1]
             
-            print(f"\n🏆 MEJORES 3 CONFIGURACIONES - {idioma.upper()} (por F1-score):")
+            print(f"\n MEJORES 3 CONFIGURACIONES - {idioma.upper()} (por F1-score):")
             for i, idx in enumerate(mejores_indices):
                 res = resultados[idx]
                 config = CONFIGURACIONES[idx]
@@ -818,14 +808,14 @@ def main():
                       f"Precision = {res['precision']:.4f}, Recall = {res['recall']:.4f}")
                 print(f"     Parámetros: {config}")
             
-            print(f"\n⏱️  Tiempo total {idioma.upper()}: {sum(tiempos):.2f} segundos")
-            print(f"⏱️  Tiempo promedio por configuración: {np.mean(tiempos):.2f} segundos")
+            print(f"\n  Tiempo total {idioma.upper()}: {sum(tiempos):.2f} segundos")
+            print(f"  Tiempo promedio por configuración: {np.mean(tiempos):.2f} segundos")
         else:
-            print(f"❌ No se obtuvieron resultados para {idioma}")
+            print(f" No se obtuvieron resultados para {idioma}")
     
     # Ejecutar validación cruzada para ambos idiomas
     print(f"\n{'='*80}")
-    print("🎯 EJECUTANDO VALIDACIÓN CRUZADA PARA MEJORES CONFIGURACIONES")
+    print(" EJECUTANDO VALIDACIÓN CRUZADA PARA MEJORES CONFIGURACIONES")
     print(f"{'='*80}")
     
     for idioma in idiomas:
@@ -836,10 +826,10 @@ def main():
     if 'es' in todos_resultados and 'en' in todos_resultados:
         if len(todos_resultados['es']) > 0 and len(todos_resultados['en']) > 0:
             print(f"\n{'='*80}")
-            print("📊 GENERANDO ANÁLISIS PROFUNDO DE TENDENCIAS")
+            print(" GENERANDO ANÁLISIS PROFUNDO DE TENDENCIAS")
             print(f"{'='*80}")
             
-            # NUEVO: Análisis profundo de tendencias
+            # Análisis profundo de tendencias
             generar_analisis_profundo_tendencias(todos_resultados['es'], todos_resultados['en'], CONFIGURACIONES)
             
             # Análisis comparativo existente
@@ -847,18 +837,9 @@ def main():
             graficar_comparacion_es_en(todos_resultados['es'], todos_resultados['en'], CONFIGURACIONES)
     
     print(f"\n{'='*80}")
-    print("🎉 EXPERIMENTO COMPLETADO EXITOSAMENTE")
+    print(" EXPERIMENTO COMPLETADO EXITOSAMENTE")
     print(f"{'='*80}")
-    print("📁 Resultados guardados en:")
-    print("   - resultados/metricas_detalladas_[es|en].txt")
-    print("   - resultados/tabla_resultados_[es|en].txt") 
-    print("   - resultados/validacion_cruzada_[es|en].txt")
-    print("   - resultados/analisis_comparativo.txt")
-    print("   - resultados/analisis_profundo_tendencias.txt")  # NUEVO
-    print("   - resultados/graficas/error_vs_epocas_top5_[es|en].png")  # NUEVO
-    print("   - resultados/graficas/")
-    print(f"{'='*80}")
-
+    
 
 if __name__ == '__main__':
     main()

@@ -1,11 +1,9 @@
+# src/evaluacion_gpu.py
 import torch
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 from sklearn.model_selection import KFold
 import time
-
-# NOTA: No importar entrenar_mlp_gpu aquí para evitar circular imports
-# En su lugar, pasaremos la función como parámetro
 
 def evaluar_modelo_gpu(model, X, y):
     """Evaluación completa del modelo en GPU"""
@@ -32,7 +30,7 @@ def evaluar_modelo_gpu(model, X, y):
 
 def validacion_cruzada_gpu(config, X, y, entrenar_func, k_folds=5, epochs=100, lr=0.01, batch_size=32):
     """Validación cruzada que recibe la función de entrenamiento como parámetro"""
-    print(f"   🔍 Realizando validación cruzada ({k_folds}-folds)...")
+    print(f"  Realizando validación cruzada ({k_folds}-folds)...")
     
     kfold = KFold(n_splits=k_folds, shuffle=True, random_state=42)
     fold_scores = []

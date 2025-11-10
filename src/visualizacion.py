@@ -1,9 +1,10 @@
+# src/visualizacion.py
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 
 def graficar_top5_configuraciones(resultados, configuraciones, idioma='es'):
-    """Grafica las curvas de pérdida para las 5 mejores configuraciones (requerido por PDF)"""
+    """Grafica las curvas de pérdida para las 5 mejores configuraciones"""
     
     # Ordenar por F1-score y tomar las 5 mejores
     indices_mejores = np.argsort([r['f1'] for r in resultados])[-5:][::-1]
@@ -56,8 +57,8 @@ def graficar_top5_configuraciones(resultados, configuraciones, idioma='es'):
     plt.tight_layout()
     plt.savefig(f'resultados/graficas/top5_perdidas_{idioma}.png', dpi=300, bbox_inches='tight')
     plt.close()
-    
-    print(f"   ✅ Gráfica TOP 5 configuraciones guardada: top5_perdidas_{idioma}.png")
+
+    print(f"   Gráfica TOP 5 configuraciones guardada: top5_perdidas_{idioma}.png")
 
 def graficar_comparacion_es_en(resultados_es, resultados_en, configuraciones):
     """Grafica comparativa directa entre español e inglés"""

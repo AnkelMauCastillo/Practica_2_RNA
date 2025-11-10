@@ -13,7 +13,7 @@ def cargar_resultados_existentes():
     try:
         from configs_completas_gpu import CONFIGURACIONES
     except ImportError:
-        print("❌ No se pudo cargar CONFIGURACIONES")
+        print(" No se pudo cargar CONFIGURACIONES")
         return [], []
     
     # Cargar resultados desde los archivos de texto
@@ -24,7 +24,7 @@ def cargar_resultados_existentes():
             # En una implementación real, necesitarías un parseo más robusto
             pass
     except FileNotFoundError:
-        print("❌ No se encontraron archivos de resultados")
+        print(" No se encontraron archivos de resultados")
     
     return resultados_es, resultados_en, CONFIGURACIONES
 
@@ -33,7 +33,7 @@ def graficar_error_vs_epocas_top5(resultados, configuraciones, idioma='es'):
     Genera gráficas de error vs épocas para las 5 mejores configuraciones
     según lo requerido en el PDF
     """
-    print(f"📊 Generando gráficas de error vs épocas para {idioma.upper()}...")
+    print(f" Generando gráficas de error vs épocas para {idioma.upper()}...")
     
     # Ordenar por F1-score y tomar las 5 mejores
     indices_mejores = np.argsort([r['f1'] for r in resultados])[-5:][::-1]
@@ -109,15 +109,15 @@ def graficar_error_vs_epocas_top5(resultados, configuraciones, idioma='es'):
     filename = f'resultados/graficas/error_vs_epocas_top5_{idioma}.png'
     plt.savefig(filename, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    
-    print(f"   ✅ Gráfica de error vs épocas guardada: {filename}")
+
+    print(f"   Gráfica de error vs épocas guardada: {filename}")
     return filename
 
 def generar_analisis_profundo_tendencias(resultados_es, resultados_en, configuraciones):
     """
     Genera un análisis profundo de tendencias basado en los resultados experimentales
     """
-    print("📝 Generando análisis profundo de tendencias...")
+    print(" Generando análisis profundo de tendencias...")
     
     analisis = []
     
@@ -326,14 +326,6 @@ def generar_analisis_profundo_tendencias(resultados_es, resultados_en, configura
     analisis.append(f"DIFERENCIA ENTRE IDIOMAS: {diff_f1:.4f} (ES mejor por {diff_f1*100:.1f}%)")
     analisis.append("")
     
-    # Recomendaciones
-    analisis.append("RECOMENDACIONES:")
-    analisis.append("- Para español: Usar unigramas+bigramas con TF y preprocesamiento normal")
-    analisis.append("- Para inglés:  Mejor rendimiento con configuraciones similares pero menor F1")
-    analisis.append("- Xavier initialization generalmente mejor que Normal")
-    analisis.append("- Learning rate 0.01 ofrece mejor equilibrio entre convergencia y estabilidad")
-    analisis.append("- Preprocesamiento simple (sin stopwords/stemming) funciona mejor")
-    
     # Guardar análisis
     os.makedirs('resultados', exist_ok=True)
     with open('resultados/analisis_profundo_tendencias.txt', 'w', encoding='utf-8') as f:
@@ -341,80 +333,27 @@ def generar_analisis_profundo_tendencias(resultados_es, resultados_en, configura
         f.write("=" * 60 + "\n\n")
         for linea in analisis:
             f.write(linea + "\n")
-    
-    print("   ✅ Análisis profundo guardado: resultados/analisis_profundo_tendencias.txt")
+
+    print("   Análisis profundo guardado: resultados/analisis_profundo_tendencias.txt")
     return analisis
 
-def crear_datos_ejemplo():
-    """
-    Crea datos de ejemplo para probar las funciones
-    Esto es temporal - en producción usarías los datos reales
-    """
-    from configs_completas_gpu import CONFIGURACIONES
-    
-    # Datos de ejemplo basados en tus resultados
-    resultados_es = []
-    resultados_en = []
-    
-    for i, config in enumerate(CONFIGURACIONES):
-        # Crear datos de pérdida de ejemplo
-        epochs = min(config['epochs'], 100)
-        train_losses = [0.8 - 0.007 * epoch + np.random.normal(0, 0.01) for epoch in range(epochs)]
-        test_losses = [0.75 - 0.006 * epoch + np.random.normal(0, 0.02) for epoch in range(epochs)]
-        
-        # Valores de F1 basados en tus resultados reales
-        f1_es = 0.6 + 0.2 * (i / len(CONFIGURACIONES)) + np.random.normal(0, 0.05)
-        f1_en = 0.55 + 0.15 * (i / len(CONFIGURACIONES)) + np.random.normal(0, 0.05)
-        
-        resultados_es.append({
-            'f1': max(0.5, min(0.9, f1_es)),
-            'precision': max(0.5, min(0.9, f1_es - 0.05)),
-            'recall': max(0.5, min(0.9, f1_es + 0.05)),
-            'train_losses': train_losses,
-            'test_losses': test_losses,
-            'train_accuracies': [0.5 + 0.005 * epoch for epoch in range(epochs)],
-            'test_accuracies': [0.48 + 0.004 * epoch for epoch in range(epochs)]
-        })
-        
-        resultados_en.append({
-            'f1': max(0.5, min(0.9, f1_en)),
-            'precision': max(0.5, min(0.9, f1_en - 0.05)),
-            'recall': max(0.5, min(0.9, f1_en + 0.05)),
-            'train_losses': train_losses,
-            'test_losses': test_losses,
-            'train_accuracies': [0.5 + 0.005 * epoch for epoch in range(epochs)],
-            'test_accuracies': [0.48 + 0.004 * epoch for epoch in range(epochs)]
-        })
-    
-    return resultados_es, resultados_en, CONFIGURACIONES
 
 def main():
     """Función principal para generar análisis final"""
-    print("🧠 GENERANDO ANÁLISIS FINAL Y GRÁFICAS")
+    print(" GENERANDO ANÁLISIS FINAL Y GRÁFICAS")
     print("=" * 60)
     
     # Intentar cargar resultados existentes
     resultados_es, resultados_en, configuraciones = cargar_resultados_existentes()
-    
-    # Si no hay resultados, usar datos de ejemplo
-    if not resultados_es or not resultados_en:
-        print("⚠️  No se encontraron resultados existentes, usando datos de ejemplo")
-        resultados_es, resultados_en, configuraciones = crear_datos_ejemplo()
-    
+
     # Generar gráficas de error vs épocas
-    print("\n📈 GENERANDO GRÁFICAS DE ERROR VS ÉPOCAS")
+    print("\n GENERANDO GRÁFICAS DE ERROR VS ÉPOCAS")
     for idioma, resultados in [('es', resultados_es), ('en', resultados_en)]:
         graficar_error_vs_epocas_top5(resultados, configuraciones, idioma)
     
     # Generar análisis profundo
-    print("\n📊 GENERANDO ANÁLISIS PROFUNDO DE TENDENCIAS")
+    print("\n GENERANDO ANÁLISIS PROFUNDO DE TENDENCIAS")
     generar_analisis_profundo_tendencias(resultados_es, resultados_en, configuraciones)
     
-    print("\n✅ ANÁLISIS FINAL COMPLETADO")
-    print("📁 Archivos generados:")
-    print("   - resultados/graficas/error_vs_epocas_top5_es.png")
-    print("   - resultados/graficas/error_vs_epocas_top5_en.png")
-    print("   - resultados/analisis_profundo_tendencias.txt")
-
 if __name__ == '__main__':
     main()

@@ -1,3 +1,4 @@
+# src/validacion_cruzada_final.py
 import json
 import numpy as np
 import os
@@ -12,7 +13,7 @@ from sklearn.model_selection import KFold
 
 def validacion_cruzada_simple(config, X, y, k_folds=5, epochs=50):
     """Validación cruzada simplificada sin dependencias circulares"""
-    print(f"   🔍 Validación cruzada ({k_folds}-folds, {epochs} épocas)...")
+    print(f"   Validación cruzada ({k_folds}-folds, {epochs} épocas)...")
     
     kfold = KFold(n_splits=k_folds, shuffle=True, random_state=42)
     fold_scores = []
@@ -64,7 +65,7 @@ def validacion_cruzada_simple(config, X, y, k_folds=5, epochs=50):
 def ejecutar_validacion_cruzada_final():
     """Ejecuta solo la validación cruzada para las mejores configuraciones"""
     
-    print("🎯 VALIDACIÓN CRUZADA FINAL - 5 FOLDS")
+    print(" VALIDACIÓN CRUZADA  - 5 FOLDS")
     print("="*60)
     
     # Configuraciones basadas en tus mejores resultados
@@ -88,7 +89,7 @@ def ejecutar_validacion_cruzada_final():
     }
     
     def cargar_datos_simple(archivo):
-        """Carga datos simplificada"""
+        """Carga datos """
         with open(archivo, 'r', encoding='utf-8') as f:
             datos = json.load(f)
         textos = [d.get('text', '') for d in datos]
@@ -96,16 +97,16 @@ def ejecutar_validacion_cruzada_final():
         return textos, etiquetas
     
     for idioma in ['es', 'en']:
-        print(f"\n📊 PROCESANDO: {idioma.upper()}")
+        print(f"\n PROCESANDO: {idioma.upper()}")
         
         try:
             # Cargar datos completos
             X_todos, y_todos = cargar_datos_simple(f'data/hateval_{idioma}_all.json')
-            print(f"   ✅ Datos: {len(X_todos)} ejemplos")
-            print(f"   📈 Distribución: {np.bincount(y_todos)}")
+            print(f"    Datos: {len(X_todos)} ejemplos")
+            print(f"    Distribución: {np.bincount(y_todos)}")
             
             for i, config in enumerate(configs_mejores[idioma]):
-                print(f"\n   🔧 Configuración {i+1}/3:")
+                print(f"\n   Configuración {i+1}/3:")
                 print(f"      {config}")
                 
                 # Preprocesar
@@ -120,14 +121,14 @@ def ejecutar_validacion_cruzada_final():
                 X_vec = vectorizador.fit_transform(X_procesados).toarray()
                 y_vec = np.array(y_todos).reshape(-1, 1)
                 
-                print(f"      ✅ Vectorizado: {X_vec.shape}")
+                print(f"       Vectorizado: {X_vec.shape}")
                 
                 # Validación cruzada
                 avg_scores, fold_scores = validacion_cruzada_simple(
                     config, X_vec, y_vec, k_folds=5, epochs=50
                 )
                 
-                print(f"      📊 Resultados CV:")
+                print(f"      Resultados CV:")
                 print(f"        F1: {avg_scores['f1']:.4f} ± {avg_scores['std_f1']:.4f}")
                 print(f"        Precision: {avg_scores['precision']:.4f}")
                 print(f"        Recall: {avg_scores['recall']:.4f}")
@@ -144,7 +145,7 @@ def ejecutar_validacion_cruzada_final():
                     f.write("-" * 50 + "\n\n")
                     
         except Exception as e:
-            print(f"   ❌ Error: {e}")
+            print(f"   Error: {e}")
 
 if __name__ == '__main__':
     ejecutar_validacion_cruzada_final()

@@ -1,3 +1,4 @@
+# src/mlp_gpu.py
 import torch
 import torch.nn as nn
 import numpy as np
@@ -7,7 +8,7 @@ class MLP_GPU(nn.Module):
         super(MLP_GPU, self).__init__()
         
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        print(f"✓ Usando dispositivo: {self.device}")
+        print(f" Usando dispositivo: {self.device}")
         
         # Capa oculta y capa de salida
         self.hidden = nn.Linear(input_size, hidden_size)
@@ -25,11 +26,11 @@ class MLP_GPU(nn.Module):
         if tipo == 'xavier':
             nn.init.xavier_uniform_(self.hidden.weight)
             nn.init.xavier_uniform_(self.output.weight)
-            print("✓ Inicialización Xavier aplicada")
+            print(" Inicialización Xavier aplicada")
         elif tipo == 'normal':
             nn.init.normal_(self.hidden.weight, mean=0, std=0.01)
             nn.init.normal_(self.output.weight, mean=0, std=0.01)
-            print("✓ Inicialización Normal aplicada")
+            print(" Inicialización Normal aplicada")
         
         # Inicializar biases a cero
         nn.init.zeros_(self.hidden.bias)
