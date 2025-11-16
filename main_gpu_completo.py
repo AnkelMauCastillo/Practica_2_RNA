@@ -758,7 +758,7 @@ def ejecutar_experimento_idioma(idioma='es'):
 
 def main():
     print(" PRÁCTICA 2: CLASIFICACIÓN DE HATE SPEECH CON MLP Y GPU")
-    print(" Implementación desde cero con PyTorch y optimización GPU")
+    
     print("="*80)
     
     # Verificar GPU
